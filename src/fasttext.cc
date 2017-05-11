@@ -123,7 +123,7 @@ void FastText::saveModel() {
   ofs.close();
 }
 
-
+/*
 void FastText::saveModel(int afterEpoch) {
   std::string fn(args_->output);
   fn += std::to_string(afterEpoch);
@@ -154,6 +154,7 @@ void FastText::saveModel(int afterEpoch) {
 
   ofs.close();
 }
+*/
 
 void FastText::loadModel(const std::string& filename) {
   std::ifstream ifs(filename, std::ifstream::binary);
@@ -552,10 +553,11 @@ void FastText::trainThread(int32_t threadId) {
 
   const int64_t ntokens = dict_->ntokens();
   int64_t localTokenCount = 0;
-  int64_t epoch = 0;
+  // int64_t epoch = 0;
   std::vector<int32_t> line, labels;
   while (tokenCount < args_->epoch * ntokens) {
     real progress = real(tokenCount) / (args_->epoch * ntokens);
+    /*
     if (real(tokenCount)/ntokens > epoch + 1) {
         epoch++;
         if (threadId == 0) {
@@ -563,6 +565,7 @@ void FastText::trainThread(int32_t threadId) {
             saveModel(epoch);
         }
     }
+    */
     real lr = args_->lr * (1.0 - progress);
     localTokenCount += dict_->getLine(ifs, line, labels, model.rng);
     if (args_->model == model_name::sup) {
