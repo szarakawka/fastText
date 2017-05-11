@@ -123,6 +123,38 @@ void FastText::saveModel() {
   ofs.close();
 }
 
+
+void FastText::saveModel(int afterEpoch) {
+  std::string fn(args_->output);
+  fn += std::to_string(afterEpoch);
+  fn += ".bin";
+
+  std::ofstream ofs(fn, std::ofstream::binary);
+  if (!ofs.is_open()) {
+    std::cerr << "Model file cannot be opened for saving!" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  signModel(ofs);
+  args_->save(ofs);
+  dict_->save(ofs);
+
+  ofs.write((char*)&(quant_), sizeof(bool));
+  if (quant_) {
+    qinput_->save(ofs);
+  } else {
+    input_->save(ofs);
+  }
+
+  ofs.write((char*)&(args_->qout), sizeof(bool));
+  if (quant_ && args_->qout) {
+    qoutput_->save(ofs);
+  } else {
+    output_->save(ofs);
+  }
+
+  ofs.close();
+}
+
 void FastText::loadModel(const std::string& filename) {
   std::ifstream ifs(filename, std::ifstream::binary);
   if (!ifs.is_open()) {
@@ -520,9 +552,17 @@ void FastText::trainThread(int32_t threadId) {
 
   const int64_t ntokens = dict_->ntokens();
   int64_t localTokenCount = 0;
+  int64_t epoch = 0;
   std::vector<int32_t> line, labels;
   while (tokenCount < args_->epoch * ntokens) {
     real progress = real(tokenCount) / (args_->epoch * ntokens);
+    if (real(tokenCount)/ntokens > epoch + 1) {
+        epoch++;
+        if (threadId == 0) {
+           
+            saveModel(epoch);
+        }
+    }
     real lr = args_->lr * (1.0 - progress);
     localTokenCount += dict_->getLine(ifs, line, labels, model.rng);
     if (args_->model == model_name::sup) {

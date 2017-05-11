@@ -57,6 +57,7 @@ class FastText {
     void saveVectors();
     void saveOutput();
     void saveModel();
+    void saveModel(int epoch);
     void loadModel(std::istream&);
     void loadModel(const std::string&);
     void printInfo(real, real);
